@@ -38,20 +38,20 @@ def input_fn(file_pattern, tf_transform_output, num_epochs, batch_size=64)->tf.d
     )
 
     return dataset
-
+# BUG
 def _get_serve_tf_examples_fn(model, tf_transform_output):
     model.tft_layer = tf_transform_output.transform_features_layer()
 
     @tf.function
     def serve_tf_examples_fn(serialized_tf_examples):
+        # serialized tf example shape [none, 13]
+
         feature_spec = tf_transform_output.raw_feature_spec()
-        print("Original feature_spec:", feature_spec)  # Debug print
+        print(len(feature_spec))
 
         feature_spec.pop(LABEL_KEY)
-        print("Modified feature_spec:", feature_spec)  # Debug print
 
         parsed_features = tf.io.parse_example(serialized_tf_examples, feature_spec)
-        print("Parsed features:", parsed_features)  # Debug print
 
         transformed_features = model.tft_layer(parsed_features)
 
@@ -73,32 +73,22 @@ def model_builder(hparams):
     
     
     inputs = {
-        'Age_xf': tf.keras.layers.Input(shape=(1,), name='Age_xf'),
-        'Absences_xf': tf.keras.layers.Input(shape=(1,), name='Absences_xf'),
-        'GPA_xf': tf.keras.layers.Input(shape=(1,), name='GPA_xf'),
-        'StudyTimeWeekly_xf': tf.keras.layers.Input(shape=(1,), name='StudyTimeWeekly_xf'),
-        'Ethnicity_caucasian': tf.keras.layers.Input(shape=(1,), name='Ethnicity_caucasian'),
-        'Ethnicity_african_american': tf.keras.layers.Input(shape=(1,), name='Ethnicity_african_american'),
-        'Ethnicity_asian': tf.keras.layers.Input(shape=(1,), name='Ethnicity_asian'),
-        'Ethnicity_other': tf.keras.layers.Input(shape=(1,), name='Ethnicity_other'),
-        'ParentalEducation_None': tf.keras.layers.Input(shape=(1,), name='ParentalEducation_None'),
-        'ParentalEducation_HighSchool': tf.keras.layers.Input(shape=(1,), name='ParentalEducation_HighSchool'),
-        'ParentalEducation_SomeCollege': tf.keras.layers.Input(shape=(1,), name='ParentalEducation_SomeCollege'),
-        'ParentalEducation_Bachelor': tf.keras.layers.Input(shape=(1,), name='ParentalEducation_Bachelor'),
-        'ParentalEducation_Higher': tf.keras.layers.Input(shape=(1,), name='ParentalEducation_Higher'),
-        'ParentalSupport_None': tf.keras.layers.Input(shape=(1,), name='ParentalSupport_None'),
-        'ParentalSupport_Low': tf.keras.layers.Input(shape=(1,), name='ParentalSupport_Low'),
-        'ParentalSupport_Moderate': tf.keras.layers.Input(shape=(1,), name='ParentalSupport_Moderate'),
-        'ParentalSupport_High': tf.keras.layers.Input(shape=(1,), name='ParentalSupport_High'),
-        'ParentalSupport_VeryHigh': tf.keras.layers.Input(shape=(1,), name='ParentalSupport_VeryHigh'),
-        'Extracurricular': tf.keras.layers.Input(shape=(1,), name='Extracurricular'),
-        'Gender': tf.keras.layers.Input(shape=(1,), name='Gender'),
-        'Music': tf.keras.layers.Input(shape=(1,), name='Music'),
-        'Sports': tf.keras.layers.Input(shape=(1,), name='Sports'),
-        'Tutoring': tf.keras.layers.Input(shape=(1,), name='Tutoring'),
-        'Volunteering': tf.keras.layers.Input(shape=(1,), name='Volunteering')
+        transformed_key('Age'): tf.keras.layers.Input(shape=[1], name=transformed_key('Age')),
+        transformed_key('Absences'): tf.keras.layers.Input(shape=[1], name=transformed_key('Absences')),
+        transformed_key('GPA'): tf.keras.layers.Input(shape=[1], name=transformed_key('GPA')),
+        transformed_key('StudyTimeWeekly'): tf.keras.layers.Input(shape=[1], name=transformed_key('StudyTimeWeekly')),
+        'Ethnicity': tf.keras.layers.Input(shape=[1], name='Ethnicity'),
+        'ParentalEducation': tf.keras.layers.Input(shape=[1], name='ParentalEducation'),
+        'ParentalSupport': tf.keras.layers.Input(shape=[1], name='ParentalSupport'),
+        'Extracurricular': tf.keras.layers.Input(shape=[1], name='Extracurricular'),
+        'Gender': tf.keras.layers.Input(shape=[1], name='Gender'),
+        'Music': tf.keras.layers.Input(shape=[1], name='Music'),
+        'Sports': tf.keras.layers.Input(shape=[1], name='Sports'),
+        'Tutoring': tf.keras.layers.Input(shape=[1], name='Tutoring'),
+        'Volunteering': tf.keras.layers.Input(shape=[1], name='Volunteering')
     }
 
+    # Concatenate all input features
     concat = tf.keras.layers.Concatenate()(list(inputs.values()))
 
     x = layers.Dense(hparams.get('units'), activation='relu')(concat)
