@@ -47,7 +47,6 @@ def _get_serve_tf_examples_fn(model, tf_transform_output):
         # serialized tf example shape [none, 13]
 
         feature_spec = tf_transform_output.raw_feature_spec()
-        print(len(feature_spec))
 
         feature_spec.pop(LABEL_KEY)
 
@@ -65,6 +64,7 @@ def get_hyperparameters() -> keras_tuner.HyperParameters:
     hp = keras_tuner.HyperParameters()
     hp.Choice('units', [16, 32, 64], default=32)
     hp.Choice('learning_rate', [1e-2, 1e-3], default=1e-3)
+    hp.Choice('num_layers', [3, 5, 7], default=3)
 
     return hp
 
@@ -89,11 +89,11 @@ def model_builder(hparams):
     }
 
     # Concatenate all input features
-    concat = tf.keras.layers.Concatenate()(list(inputs.values()))
+    concat = layers.Concatenate()(list(inputs.values()))
 
     x = layers.Dense(hparams.get('units'), activation='relu')(concat)
-    x = layers.Dense(hparams.get('units'), activation='relu')(x)
-    x = layers.Dense(hparams.get('units'), activation='relu')(x)
+    for _ in range(int(hparams.get('num_layers'))):
+        x = layers.Dense(hparams.get('units'), activation='relu')(x)
     outputs = layers.Dense(5, activation='softmax')(x)
 
     model = tf.keras.Model(inputs=inputs, outputs=outputs)
@@ -184,7 +184,7 @@ def run_fn(fn_args: FnArgs) -> None:
         x = train_set,
         validation_data = val_set,
         callbacks = [tensorboard_callback, es, mc],
-        epochs=50,
+        epochs=10,
         verbose=2
     )
 
@@ -192,7 +192,7 @@ def run_fn(fn_args: FnArgs) -> None:
         'serving_default':
         _get_serve_tf_examples_fn(model, tf_transform_output).get_concrete_function(
             tf.TensorSpec(
-                shape=[None, 13],
+                shape=[None],
                 dtype=tf.string,
                 name='examples'
             )
