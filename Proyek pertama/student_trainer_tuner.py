@@ -38,7 +38,7 @@ def input_fn(file_pattern, tf_transform_output, num_epochs, batch_size=64)->tf.d
     )
 
     return dataset
-# BUG
+
 def _get_serve_tf_examples_fn(model, tf_transform_output):
     model.tft_layer = tf_transform_output.transform_features_layer()
 
@@ -70,22 +70,32 @@ def get_hyperparameters() -> keras_tuner.HyperParameters:
 
 def model_builder(hparams):
     """Build machine learning model with hyperparameter tuning"""
-    
-    
+
     inputs = {
-        transformed_key('Age'): tf.keras.layers.Input(shape=[1], name=transformed_key('Age')),
-        transformed_key('Absences'): tf.keras.layers.Input(shape=[1], name=transformed_key('Absences')),
-        transformed_key('GPA'): tf.keras.layers.Input(shape=[1], name=transformed_key('GPA')),
-        transformed_key('StudyTimeWeekly'): tf.keras.layers.Input(shape=[1], name=transformed_key('StudyTimeWeekly')),
-        'Ethnicity': tf.keras.layers.Input(shape=[1], name='Ethnicity'),
-        'ParentalEducation': tf.keras.layers.Input(shape=[1], name='ParentalEducation'),
-        'ParentalSupport': tf.keras.layers.Input(shape=[1], name='ParentalSupport'),
-        'Extracurricular': tf.keras.layers.Input(shape=[1], name='Extracurricular'),
-        'Gender': tf.keras.layers.Input(shape=[1], name='Gender'),
-        'Music': tf.keras.layers.Input(shape=[1], name='Music'),
-        'Sports': tf.keras.layers.Input(shape=[1], name='Sports'),
-        'Tutoring': tf.keras.layers.Input(shape=[1], name='Tutoring'),
-        'Volunteering': tf.keras.layers.Input(shape=[1], name='Volunteering')
+        transformed_key('Age'): tf.keras.layers.Input(shape=(1,), name= transformed_key('Age')),
+        transformed_key('Absences'): tf.keras.layers.Input(shape=(1,), name=transformed_key('Absences')),
+        transformed_key('GPA'): tf.keras.layers.Input(shape=(1,), name= transformed_key('GPA')),
+        transformed_key('StudyTimeWeekly'): tf.keras.layers.Input(shape=(1,), name=transformed_key('StudyTimeWeekly')),
+        'Ethnicity_caucasian': tf.keras.layers.Input(shape=(1,), name='Ethnicity_caucasian'),
+        'Ethnicity_african_american': tf.keras.layers.Input(shape=(1,), name='Ethnicity_african_american'),
+        'Ethnicity_asian': tf.keras.layers.Input(shape=(1,), name='Ethnicity_asian'),
+        'Ethnicity_other': tf.keras.layers.Input(shape=(1,), name='Ethnicity_other'),
+        'ParentalEducation_None': tf.keras.layers.Input(shape=(1,), name='ParentalEducation_None'),
+        'ParentalEducation_HighSchool': tf.keras.layers.Input(shape=(1,), name='ParentalEducation_HighSchool'),
+        'ParentalEducation_SomeCollege': tf.keras.layers.Input(shape=(1,), name='ParentalEducation_SomeCollege'),
+        'ParentalEducation_Bachelor': tf.keras.layers.Input(shape=(1,), name='ParentalEducation_Bachelor'),
+        'ParentalEducation_Higher': tf.keras.layers.Input(shape=(1,), name='ParentalEducation_Higher'),
+        'ParentalSupport_None': tf.keras.layers.Input(shape=(1,), name='ParentalSupport_None'),
+        'ParentalSupport_Low': tf.keras.layers.Input(shape=(1,), name='ParentalSupport_Low'),
+        'ParentalSupport_Moderate': tf.keras.layers.Input(shape=(1,), name='ParentalSupport_Moderate'),
+        'ParentalSupport_High': tf.keras.layers.Input(shape=(1,), name='ParentalSupport_High'),
+        'ParentalSupport_VeryHigh': tf.keras.layers.Input(shape=(1,), name='ParentalSupport_VeryHigh'),
+        'Extracurricular': tf.keras.layers.Input(shape=(1,), name='Extracurricular'),
+        'Gender': tf.keras.layers.Input(shape=(1,), name='Gender'),
+        'Music': tf.keras.layers.Input(shape=(1,), name='Music'),
+        'Sports': tf.keras.layers.Input(shape=(1,), name='Sports'),
+        'Tutoring': tf.keras.layers.Input(shape=(1,), name='Tutoring'),
+        'Volunteering': tf.keras.layers.Input(shape=(1,), name='Volunteering')
     }
 
     # Concatenate all input features
@@ -103,7 +113,7 @@ def model_builder(hparams):
     model.compile(
         optimizer=tf.keras.optimizers.Adam(learning_rate=hparams.get('learning_rate')),
         loss='sparse_categorical_crossentropy',
-        metrics=['accuracy']
+        metrics=[tf.keras.metrics.SparseCategoricalAccuracy()]
     )
 
     return model
@@ -136,7 +146,7 @@ def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
     # Define tuner
     tuner = RandomSearch(
         model_builder,
-        objective='val_accuracy',
+        objective='val_sparse_categorical_accuracy',
         max_trials=10,
         hyperparameters=get_hyperparameters(),
         directory=fn_args.working_dir,
@@ -146,13 +156,13 @@ def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
     tf_transform_output = tft.TFTransformOutput(fn_args.transform_graph_path)
 
     train_set = input_fn(fn_args.train_files, tf_transform_output, 10)
-    val_set = input_fn(fn_args.eval_files, tf_transform_output, 10)
+    eval_set = input_fn(fn_args.eval_files, tf_transform_output, 10)
 
     return TunerFnResult(
         tuner=tuner,
         fit_kwargs={
             'x': train_set,
-            'validation_data': val_set
+            'validation_data': eval_set
         }
     )
 
@@ -164,15 +174,15 @@ def run_fn(fn_args: FnArgs) -> None:
         log_dir = log_dir, update_freq='batch'
     )
 
-    es = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy', mode='max', patience=10, verbose=1)
-    mc = tf.keras.callbacks.ModelCheckpoint(fn_args.serving_model_dir, monitor='val_accuracy', mode='max', verbose=1, save_best_only=True)
+    es = tf.keras.callbacks.EarlyStopping(monitor='val_sparse_categorical_accuracy', mode='max', patience=10, verbose=1)
+    mc = tf.keras.callbacks.ModelCheckpoint(fn_args.serving_model_dir, monitor='val_sparse_categorical_accuracy', mode='max', verbose=1, save_best_only=True)
 
     # Load the transform output
     tf_transform_output = tft.TFTransformOutput(fn_args.transform_graph_path)
 
     # Create batches of data
     train_set = input_fn(fn_args.train_files, tf_transform_output, 10)
-    val_set = input_fn(fn_args.eval_files, tf_transform_output, 10)
+    eval_set = input_fn(fn_args.eval_files, tf_transform_output, 10)
 
     hparams = keras_tuner.HyperParameters.from_config(fn_args.hyperparameters)
 
@@ -182,7 +192,7 @@ def run_fn(fn_args: FnArgs) -> None:
     # Train the model
     model.fit(
         x = train_set,
-        validation_data = val_set,
+        validation_data = eval_set,
         callbacks = [tensorboard_callback, es, mc],
         epochs=10,
         verbose=2
