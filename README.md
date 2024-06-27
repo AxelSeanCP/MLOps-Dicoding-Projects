@@ -1,8 +1,10 @@
 # MLOps-Dicoding-Projects
 list of projects from dicoding's MLOps class
 
-## First Projects
+## Student Performance Classification
 create a simple ML pipeline using TensorFlow Extended (TFX)
+
+this dataset predicts student's grade class using the student-performance-dataset
 
 criteria:
 - free dataset
