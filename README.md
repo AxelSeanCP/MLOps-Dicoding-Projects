@@ -27,3 +27,18 @@ Run docker image and define port
 ```bash
 docker run -p 8080:8501 student-performance-tf-serving
 ```
+
+## Hotel Reservations Predictions
+create a simple ML pipeline using TensorFlow Extended (TFX) and deploy it to cloud
+
+this dataset predicts whether a customer will cancel or not cancel a hotel reservations using the Hotel Reservation dataset
+
+criteria:
+- free dataset
+- use all the components from TFX (ExampleGen, StatisticGen, SchemaGen, ExampleValidator, Transform, Trainer, Resolver, Evaluator, Pusher)
+- all the TFX components must be run by using Pipeline Orchestrator named **Apache Beam** and saved in a  **<username_dicoding>-pipeline** folder
+- deploy the machine learning system with cloud computations (heroku/railway)
+- monitor the machine learning system using prometheus
+- use Tuner component (optional)
+- apply clean code principal (optional)
+- add notebook file to test and run prediction request to the system in cloud (optional)

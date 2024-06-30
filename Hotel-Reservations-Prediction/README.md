@@ -12,3 +12,6 @@ Username dicoding: axelseancp
 | Arsitektur model |  |
 | Metrik evaluasi | Metrik yang digunakan adalah **BinaryAccuracy** karena *target_variable* dari dataset ini bersifat binary (dibatalkan, tidak dibatalkan) |
 | Performa model |  |
+| Opsi deployment | Deksripsi tentang opsi deployment |
+| Web app | Tautan web app yang digunakan untuk mengakses model serving. Contoh: [nama-model](https://model-resiko-kredit.herokuapp.com/v1/models/model-resiko-kredit/metadata)|
+| Monitoring | Deksripsi terkait hasil monitoring dari model serving |

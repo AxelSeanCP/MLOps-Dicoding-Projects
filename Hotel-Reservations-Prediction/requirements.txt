@@ -19,6 +19,7 @@ jupyterlab_pygments==0.3.0
 jupyterlab_server==2.16.3
 keras==2.13.1
 keras-tuner==1.4.6
+pylint
 tensorflow==2.13.1
 tensorflow-transform==1.14.0
 tensorflow-model-analysis==0.45.0
