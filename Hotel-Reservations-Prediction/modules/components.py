@@ -90,6 +90,7 @@ def init_components(
         examples = transform.outputs['transformed_examples'],
         transform_graph=transform.outputs['transform_graph'],
         schema=schema_gen.outputs['schema'],
+        hyperparameters = tuner.outputs['best_hyperparameters'],
         train_args=trainer_pb2.TrainArgs(
             splits=['train'],
             num_steps=training_steps),
@@ -154,6 +155,7 @@ def init_components(
         schema_gen,
         example_validator,
         transform,
+        tuner,
         trainer,
         model_resolver,
         evaluator,

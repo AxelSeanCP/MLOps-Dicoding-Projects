@@ -58,7 +58,7 @@ def preprocessing_fn(inputs):
     for key in CATEGORICAL_FEATURES:
         dim = CATEGORICAL_FEATURES[key]
         int_value = tft.compute_and_apply_vocabulary(
-            inputs[key], top_k=dim + 1
+            inputs[key], top_k=dim + 1, vocab_filename=key + '_vocab'
         )
         outputs[transformed_name(key)] = convert_num_to_one_hot(
             int_value, num_labels=dim + 1
