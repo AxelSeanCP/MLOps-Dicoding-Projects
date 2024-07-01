@@ -1,6 +1,6 @@
 FROM tensorflow/serving:latest
 
-COPY ./outputs/serving_model /models/hr-model
+COPY ./output/serving_model /models/hr-model
 COPY ./config /model_config
 ENV MODEL_NAME=hr-model
 ENV MONITORING_CONFIG="/model_config/prometheus.config"

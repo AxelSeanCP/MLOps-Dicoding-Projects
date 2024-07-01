@@ -11,7 +11,7 @@ Username dicoding: axelseancp
 | Metode pengolahan |  |
 | Arsitektur model |  |
 | Metrik evaluasi | Metrik yang digunakan adalah **BinaryAccuracy** karena *target_variable* dari dataset ini bersifat binary (dibatalkan, tidak dibatalkan) |
-| Performa model |  |
-| Opsi deployment | Deksripsi tentang opsi deployment |
-| Web app | Tautan web app yang digunakan untuk mengakses model serving. Contoh: [nama-model](https://model-resiko-kredit.herokuapp.com/v1/models/model-resiko-kredit/metadata)|
-| Monitoring | Deksripsi terkait hasil monitoring dari model serving |
+| Performa model | Model yang dijalankan memiliki akurasi dan loss yang stabil, serta tidak menunjukkan tanda tanda *overfitting*. Model ini dapat digunakan untuk melakukan *request* prediksi. |
+| Opsi deployment | Model ini dideploy menggunakan platform railway |
+| Web app | Tautan web app yang digunakan untuk mengakses model serving. Contoh: [hr-model](https://hotel-reservations-prediction-production.up.railway.app/v1/models/hr-model/metadata)|
+| Monitoring | Monitoring model ini dilakukan menggunakan prometheus. Monitoring yang dilakukan adalah memantau jumlah request ke dalam model. |
